@@ -58,8 +58,9 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define WAKE_UP_Pin GPIO_PIN_0
-#define WAKE_UP_GPIO_Port GPIOA
+#define WAKEUP_Pin GPIO_PIN_0
+#define WAKEUP_GPIO_Port GPIOA
+#define WAKEUP_EXTI_IRQn EXTI0_IRQn
 #define USER_LED_2_Pin GPIO_PIN_5
 #define USER_LED_2_GPIO_Port GPIOC
 #define LCD_D4_Pin GPIO_PIN_0
@@ -70,10 +71,12 @@ void Error_Handler(void);
 #define LCD_D6_GPIO_Port GPIOB
 #define Buzzer_Pin GPIO_PIN_12
 #define Buzzer_GPIO_Port GPIOB
-#define USR_SW2_Pin GPIO_PIN_8
-#define USR_SW2_GPIO_Port GPIOC
-#define USR_SW1_Pin GPIO_PIN_9
-#define USR_SW1_GPIO_Port GPIOC
+#define USER_SW2_Pin GPIO_PIN_8
+#define USER_SW2_GPIO_Port GPIOC
+#define USER_SW2_EXTI_IRQn EXTI9_5_IRQn
+#define USER_SW1_Pin GPIO_PIN_9
+#define USER_SW1_GPIO_Port GPIOC
+#define USER_SW1_EXTI_IRQn EXTI9_5_IRQn
 #define USER_LED_1_Pin GPIO_PIN_8
 #define USER_LED_1_GPIO_Port GPIOA
 #define LCD_D7_Pin GPIO_PIN_3
