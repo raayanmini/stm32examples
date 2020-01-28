@@ -129,9 +129,10 @@ int main(void)
 		ret = HAL_GPIO_ReadPin(GPIOA,WAKEUP_Pin);
 		if (ret == 0)		// Check WAKEUP Pin Status
     {
-			counter++;// Counter Increments, Switch ON
+				HAL_GPIO_TogglePin(GPIOC,USER_LED_2_Pin);
+				HAL_Delay(100);
 		}
-			HAL_Delay(100);															//	Add 100mSecond Debounce Delay
+																//	Add 100mSecond Debounce Delay
    }
   /* USER CODE END 3 */
 }
