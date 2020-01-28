@@ -54,7 +54,8 @@ UART_HandleTypeDef huart6;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-
+int counter=0;
+int ret=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,13 +126,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		if (!(HAL_GPIO_ReadPin(GPIOC,USER_SW2_Pin)))		// Check SW2 Pin Status
-		HAL_GPIO_WritePin(USER_LED_2_GPIO_Port, USER_LED_2_Pin, GPIO_PIN_RESET);		// 	IO line goes High (Led is  ON)
-		if (!(HAL_GPIO_ReadPin(GPIOC,USER_SW1_Pin)))		// Check SW1 Pin Status
-		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_RESET);		// 	IO line goes High (Led is  ON)
-
-		HAL_Delay(100);															//	Add 100mSecond Debounce Delay
-  }
+		ret = HAL_GPIO_ReadPin(GPIOA,WAKEUP_Pin);
+		if (ret == 0)		// Check WAKEUP Pin Status
+    {
+			counter++;// Counter Increments, Switch ON
+		}
+			HAL_Delay(100);															//	Add 100mSecond Debounce Delay
+   }
   /* USER CODE END 3 */
 }
 
