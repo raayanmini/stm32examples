@@ -125,10 +125,25 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+//GREEN LED		
+		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_RESET); 	// 	IO line goes Low (Led is  ON)
+		HAL_Delay(50);											//	Add 1-Second Delay
+    HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_SET);		// 	IO line goes High (Led is  OFF)
+		HAL_Delay(50);
+		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_RESET); 	// 	IO line goes Low (Led is  ON)
+		HAL_Delay(50);											//	Add 1-Second Delay
+    HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_SET);		// 	IO line goes High (Led is  OFF)
+		HAL_Delay(150);
+		
+//RED LED		
 		HAL_GPIO_WritePin(USER_LED_2_GPIO_Port, USER_LED_2_Pin, GPIO_PIN_RESET); 	// 	IO line goes Low (Led is  ON)
 		HAL_Delay(50);											//	Add 1-Second Delay
     HAL_GPIO_WritePin(USER_LED_2_GPIO_Port, USER_LED_2_Pin, GPIO_PIN_SET);		// 	IO line goes High (Led is  OFF)
-		HAL_Delay(1300);
+		HAL_Delay(250);
+		HAL_GPIO_WritePin(USER_LED_2_GPIO_Port, USER_LED_2_Pin, GPIO_PIN_RESET); 	// 	IO line goes Low (Led is  ON)
+		HAL_Delay(50);											//	Add 1-Second Delay
+    HAL_GPIO_WritePin(USER_LED_2_GPIO_Port, USER_LED_2_Pin, GPIO_PIN_SET);		// 	IO line goes High (Led is  OFF)
+		HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }
