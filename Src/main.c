@@ -114,6 +114,7 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+	HAL_GPIO_WritePin(GPIOC,USER_LED_2_Pin,GPIO_PIN_RESET);
 
   /* USER CODE END 2 */
  

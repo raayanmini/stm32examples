@@ -221,7 +221,8 @@ void EXTI0_IRQHandler(void)
 
   /* USER CODE END EXTI0_IRQn 0 */
 	counter++;
-	HAL_GPIO_TogglePin(GPIOC,USER_LED_2_Pin);
+	//HAL_GPIO_TogglePin(GPIOC,USER_LED_2_Pin);
+	HAL_GPIO_WritePin(GPIOC,USER_LED_2_Pin,GPIO_PIN_SET);// RED LED IS OFF.
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
 
