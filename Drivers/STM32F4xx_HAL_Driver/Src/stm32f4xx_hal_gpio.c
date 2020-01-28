@@ -493,11 +493,15 @@ HAL_StatusTypeDef HAL_GPIO_LockPin(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
   */
 void HAL_GPIO_EXTI_IRQHandler(uint16_t GPIO_Pin)
 {
-  /* EXTI line interrupt detected */
+	/* EXTI line interrupt detected */
   if(__HAL_GPIO_EXTI_GET_IT(GPIO_Pin) != RESET)
   {
-    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
-    HAL_GPIO_EXTI_Callback(GPIO_Pin);
+	if (GPIO_Pin == GPIO_PIN_8)// SW2 Press
+	HAL_GPIO_WritePin(GPIOC,GPIO_PIN_5,GPIO_PIN_RESET);
+  if (GPIO_Pin == GPIO_PIN_9) // SW1 Press
+	HAL_GPIO_WritePin(GPIOA,GPIO_PIN_8,GPIO_PIN_RESET);
+	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
+   HAL_GPIO_EXTI_Callback(GPIO_Pin);
   }
 }
 
