@@ -129,12 +129,11 @@ int main(void)
 		ret = HAL_GPIO_ReadPin(GPIOA,WAKEUP_Pin);
 		if (ret == 0)		// Check WAKEUP Pin Status
     {
-				HAL_GPIO_WritePin(GPIOC,USER_LED_2_Pin,GPIO_PIN_RESET);
-				HAL_Delay(100);
-		}
-		else
-				HAL_GPIO_WritePin(GPIOC,USER_LED_2_Pin,GPIO_PIN_SET);
-
+				HAL_GPIO_WritePin(GPIOB,Buzzer_Pin,GPIO_PIN_SET);
+				HAL_Delay(250);
+				HAL_GPIO_WritePin(GPIOB,Buzzer_Pin,GPIO_PIN_RESET);
+				//HAL_Delay(100);
+			}
 																//	Add 100mSecond Debounce Delay
    }
   /* USER CODE END 3 */
