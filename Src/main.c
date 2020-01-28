@@ -125,10 +125,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_RESET); 	// 	IO line goes Low (Led is  ON)
-		HAL_Delay(1000);															//	Add 1-Second Delay	
-		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_SET);		// 	IO line goes High (Led is  OFF)
-		HAL_Delay(1000);
+		if (!(HAL_GPIO_ReadPin(GPIOC,USER_SW2_Pin)))		// Check SW2 Pin Status
+		HAL_GPIO_WritePin(USER_LED_2_GPIO_Port, USER_LED_2_Pin, GPIO_PIN_RESET);		// 	IO line goes High (Led is  ON)
+		if (!(HAL_GPIO_ReadPin(GPIOC,USER_SW1_Pin)))		// Check SW1 Pin Status
+		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_RESET);		// 	IO line goes High (Led is  ON)
+
+		HAL_Delay(100);															//	Add 100mSecond Debounce Delay
   }
   /* USER CODE END 3 */
 }
