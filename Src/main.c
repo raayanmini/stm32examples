@@ -54,7 +54,7 @@ UART_HandleTypeDef huart6;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-int counter=0;
+volatile int counter=0;
 int ret=0;
 /* USER CODE END PV */
 
@@ -126,14 +126,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		ret = HAL_GPIO_ReadPin(GPIOA,WAKEUP_Pin);
-		if (ret == 0)		// Check WAKEUP Pin Status
-    {
-				HAL_GPIO_WritePin(GPIOB,Buzzer_Pin,GPIO_PIN_SET);
-				HAL_Delay(250);
-				HAL_GPIO_WritePin(GPIOB,Buzzer_Pin,GPIO_PIN_RESET);
-				//HAL_Delay(100);
-			}
+	;
 																//	Add 100mSecond Debounce Delay
    }
   /* USER CODE END 3 */
