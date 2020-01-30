@@ -280,9 +280,8 @@ void USART6_IRQHandler(void)
   /* USER CODE END USART6_IRQn 0 */
   HAL_UART_IRQHandler(&huart6);
 	/* USER CODE BEGIN USART6_IRQn 1 */
-Rx_Buff[0] = (uint8_t)(huart6.Instance->DR & (uint8_t)0x00FF);
-if(Rx_Buff[0] == 0x41)
-		Rx_Flag=1;
+  Rx_Buff[0] = (uint8_t)(huart6.Instance->DR & (uint8_t)0x00FF);
+	Rx_Flag=1;
   /* USER CODE END USART6_IRQn 1 */
 }
 

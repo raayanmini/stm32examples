@@ -54,9 +54,10 @@ UART_HandleTypeDef huart6;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-char temp='A',temp2;
+char temp='R',temp2;
 volatile char Rx_Buff[2];
 int Rx_Flag=0;
+int ret;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -119,10 +120,8 @@ int main(void)
   RM_LCD_Init();
 	RM_LCD_Clear();
 	HAL_UART_Receive_IT(&huart6,(uint8_t *)Rx_Buff,1);// UART6 Interrupt Initalization
-  /* USER CODE END 2 */
+	/* USER CODE END 2 */
  
- 
-
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -130,13 +129,31 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		ret = HAL_GPIO_ReadPin(GPIOA,WAKEUP_Pin);
+		if (ret == 0)		// Check WAKEUP Pin Status
+    {
+			  temp='R';
+				HAL_UART_Transmit(&huart6,(uint8_t *)&temp,1,PHY_FULLDUPLEX_100M);
+				HAL_Delay(500);
+		}
+		ret = HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_8);
+		if (ret == 0)		// Check WAKEUP Pin Status
+    {
+			  temp='G';
+				HAL_UART_Transmit(&huart6,(uint8_t *)&temp,1,PHY_FULLDUPLEX_100M);
+				HAL_Delay(500);
+		}
 		//HAL_UART_Transmit(&huart6,(uint8_t *)&temp,1,PHY_FULLDUPLEX_100M);
 		//HAL_UART_Receive(&huart6,(uint8_t *)&temp2,1,PHY_FULLDUPLEX_100M);
 		if(Rx_Flag == 1)
 		{
 			Rx_Flag=0;
-			RM_LCD_Write_CMD(0x80);
+			RM_LCD_Clear();
 			RM_LCD_Write_DATA(Rx_Buff[0]);
+			if (Rx_Buff[0] == 'R')
+						HAL_GPIO_TogglePin(GPIOC,USER_LED_2_Pin);
+		  if (Rx_Buff[0] == 'G')
+						HAL_GPIO_TogglePin(GPIOA,USER_LED_1_Pin);
 		}
 		//RM_LCD_Write_Str(1,1,"KERNEL MASTERS");
   }
