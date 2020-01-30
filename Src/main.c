@@ -55,6 +55,8 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
 char temp='A',temp2;
+volatile char Rx_Buff[2];
+int Rx_Flag=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -113,8 +115,10 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+	Rx_Flag=0;
   RM_LCD_Init();
 	RM_LCD_Clear();
+	HAL_UART_Receive_IT(&huart6,(uint8_t *)Rx_Buff,1);// UART6 Interrupt Initalization
   /* USER CODE END 2 */
  
  
@@ -126,11 +130,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		HAL_UART_Transmit(&huart6,(uint8_t *)&temp,1,PHY_FULLDUPLEX_100M);
-		HAL_UART_Receive(&huart6,(uint8_t *)&temp2,1,PHY_FULLDUPLEX_100M);
-		RM_LCD_Write_CMD(0x80);
-		RM_LCD_Write_DATA(temp2);
-	//RM_LCD_Write_Str(1,1,"KERNEL MASTERS");
+		//HAL_UART_Transmit(&huart6,(uint8_t *)&temp,1,PHY_FULLDUPLEX_100M);
+		//HAL_UART_Receive(&huart6,(uint8_t *)&temp2,1,PHY_FULLDUPLEX_100M);
+		if(Rx_Flag == 1)
+		{
+			Rx_Flag=0;
+			RM_LCD_Write_CMD(0x80);
+			RM_LCD_Write_DATA(Rx_Buff[0]);
+		}
+		//RM_LCD_Write_Str(1,1,"KERNEL MASTERS");
   }
   /* USER CODE END 3 */
 }
