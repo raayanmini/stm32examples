@@ -23,6 +23,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+ extern void Usart_Recv_Task(unsigned char Byte);
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -252,6 +253,8 @@ void USART1_IRQHandler(void)
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
 
+unsigned char Temp =  (uint8_t)(huart1.Instance->DR & (uint8_t)0x00FF);
+	Usart_Recv_Task(Temp);
   /* USER CODE END USART1_IRQn 1 */
 }
 

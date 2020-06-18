@@ -23,7 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "LCD.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,7 +55,8 @@ UART_HandleTypeDef huart6;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-
+uint8_t	DisplaY_Buff[16];
+char  Rx_data[2],Rxd_Byte;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,12 +70,23 @@ static void MX_USART6_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_RTC_Init(void);
 /* USER CODE BEGIN PFP */
-
+void Reset_Usart_Recv_task(void);
+unsigned char Usart_Get_Data(unsigned char Index);
+void RX_Task(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#define Max_RX_Buff_Size	50
+struct Usart_Resp {
+	volatile unsigned char RX_Buff[Max_RX_Buff_Size];
+	volatile unsigned char Start_Recv;
+	volatile unsigned char Recv_Cmplt_Flag;
+	volatile unsigned char Recv_Enable;
+	volatile unsigned int Recv_Cnt;
+}Usart_Resp;
 
+struct Usart_Resp Usart_BLE;
 /* USER CODE END 0 */
 
 /**
@@ -85,7 +98,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
-  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -113,10 +125,21 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
-
+	RM_LCD_Init();	
+	RM_LCD_Clear();	  
+	HAL_GPIO_WritePin(GPIOB, Buzzer_Pin,GPIO_PIN_SET);
+	HAL_Delay(100);
+	HAL_GPIO_WritePin(GPIOB, Buzzer_Pin,GPIO_PIN_RESET);
+	RM_LCD_Write_Str(3,0,"WELCOME TO");
+	RM_LCD_Write_Str(1,1,"KERNEL MASTERS ");
+	HAL_Delay(2000);
+	RM_LCD_Clear();	
+	RM_LCD_Write_Str(0,0,"Waiting for Data");
+	RM_LCD_Write_Str(0,1,"D1:OFF    D2:OFF");
+	Reset_Usart_Recv_task();
+	HAL_UART_Receive_IT(&huart1, &Rxd_Byte, 1);
+	Usart_BLE.Recv_Enable=1;
   /* USER CODE END 2 */
- 
- 
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -125,10 +148,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_RESET); 	// 	IO line goes Low (Led is  ON)
-		HAL_Delay(1000);															//	Add 1-Second Delay	
-		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_SET);		// 	IO line goes High (Led is  OFF)
-		HAL_Delay(1000);
+		if(Usart_BLE.Recv_Cmplt_Flag){ // Data Successfully Received
+			RX_Task(); //Data Processing "L1-ON"
+			
+		}
   }
   /* USER CODE END 3 */
 }
@@ -493,7 +516,79 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/******************************************/
+void Usart_Recv_Task(unsigned char Byte){
+Rxd_Byte=Byte;
+if(!Usart_BLE.Recv_Enable)
+		return;
+if(Rxd_Byte == 0x3C){ // '<' - start
+	Usart_BLE.Start_Recv = 1;
+	Usart_BLE.Recv_Cnt =0;
+	Usart_BLE.Recv_Cmplt_Flag=0;
+	return;
+	}
+//in future add code for number of bytes also
+if(Rxd_Byte == 0x3E){ // '>' - stop
+	Usart_BLE.Start_Recv = 0;
+	Usart_BLE.Recv_Cmplt_Flag=1;
+	return;
+	}
 
+Usart_BLE.RX_Buff[Usart_BLE.Recv_Cnt++] = Rxd_Byte;
+if(Usart_BLE.Recv_Cnt >= Max_RX_Buff_Size){
+	Usart_BLE.Recv_Cnt = 0;
+	//In future write code for Buffer overflow error
+	}
+	
+}
+
+
+
+/******************************************/
+void Reset_Usart_Recv_task(void){
+Usart_BLE.Start_Recv = 1;
+Usart_BLE.Recv_Cnt =0;
+Usart_BLE.Recv_Cmplt_Flag=0;
+memset(Usart_BLE.RX_Buff, '\0', sizeof(Usart_BLE.RX_Buff));
+}
+/******************************************/
+
+
+/******************************************/
+unsigned char Usart_Get_Data(unsigned char Index){
+//write code for index less than 0 or index outof border
+return Usart_BLE.RX_Buff[Index];	
+}
+/******************************************/
+
+void RX_Task(void){
+if(strcmp("L2-ON",(const char *)Usart_BLE.RX_Buff)==0){
+				HAL_GPIO_WritePin(USER_LED_2_GPIO_Port, USER_LED_2_Pin, GPIO_PIN_RESET);
+				RM_LCD_Write_Str(14,1,"N ");
+			}
+else if(strcmp("L2-OFF",(const char *)Usart_BLE.RX_Buff)==0){
+				HAL_GPIO_WritePin(USER_LED_2_GPIO_Port, USER_LED_2_Pin, GPIO_PIN_SET);
+				RM_LCD_Write_Str(14,1,"FF");
+			}
+else if(strcmp("L1-ON",(const char *)Usart_BLE.RX_Buff)==0){
+				HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_RESET);
+				RM_LCD_Write_Str(4,1,"N ");
+			}
+else if(strcmp("L1-OFF",(const char *)Usart_BLE.RX_Buff)==0){
+				HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_SET);
+				RM_LCD_Write_Str(4,1,"FF");
+			}
+else{
+				RM_LCD_Write_Str(0,0,"                ");
+				RM_LCD_Write_Str(0,0,(uint8_t *)Usart_BLE.RX_Buff);
+			}
+Reset_Usart_Recv_task();
+HAL_GPIO_WritePin(GPIOB, Buzzer_Pin,GPIO_PIN_SET);
+HAL_Delay(100);
+HAL_GPIO_WritePin(GPIOB, Buzzer_Pin,GPIO_PIN_RESET);
+
+}
+/******************************************/
 /* USER CODE END 4 */
 
 /**
