@@ -42,6 +42,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 I2C_HandleTypeDef hi2c1;
 
 RTC_HandleTypeDef hrtc;
@@ -55,8 +57,7 @@ UART_HandleTypeDef huart6;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-uint8_t	DisplaY_Buff[16];
-char  Rx_data[2],Rxd_Byte;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,24 +70,17 @@ static void MX_USART2_UART_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_RTC_Init(void);
+static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
-void Reset_Usart_Recv_task(void);
-unsigned char Usart_Get_Data(unsigned char Index);
-void RX_Task(void);
+void Read_LM35(void);
+void Wifi_Rx_Time(void);
+void Wifi_Init(void);
+void Wifi_Tx(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define Max_RX_Buff_Size	50
-struct Usart_Resp {
-	volatile unsigned char RX_Buff[Max_RX_Buff_Size];
-	volatile unsigned char Start_Recv;
-	volatile unsigned char Recv_Cmplt_Flag;
-	volatile unsigned char Recv_Enable;
-	volatile unsigned int Recv_Cnt;
-}Usart_Resp;
 
-struct Usart_Resp Usart_BLE;
 /* USER CODE END 0 */
 
 /**
@@ -124,21 +118,17 @@ int main(void)
   MX_USART6_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_RTC_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 	RM_LCD_Init();	
-	RM_LCD_Clear();	  
-	HAL_GPIO_WritePin(GPIOB, Buzzer_Pin,GPIO_PIN_SET);
+	RM_LCD_Clear();	
+  HAL_GPIO_WritePin(GPIOB, Buzzer_Pin,GPIO_PIN_SET);
 	HAL_Delay(100);
 	HAL_GPIO_WritePin(GPIOB, Buzzer_Pin,GPIO_PIN_RESET);
 	RM_LCD_Write_Str(3,0,"WELCOME TO");
 	RM_LCD_Write_Str(1,1,"KERNEL MASTERS ");
-	HAL_Delay(2000);
-	RM_LCD_Clear();	
-	RM_LCD_Write_Str(0,0,"Waiting for Data");
-	RM_LCD_Write_Str(0,1,"D1:OFF    D2:OFF");
-	Reset_Usart_Recv_task();
-	HAL_UART_Receive_IT(&huart1, &Rxd_Byte, 1);
-	Usart_BLE.Recv_Enable=1;
+	Wifi_Init(); // Wi-Fi initalization to 5 Stages.
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -148,10 +138,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		if(Usart_BLE.Recv_Cmplt_Flag){ // Data Successfully Received
-			RX_Task(); //Data Processing "L1-ON"
-			
-		}
+		Read_LM35(); // Read LM35 data
+		Wifi_Tx();// update Temperature value to KM server
+
   }
   /* USER CODE END 3 */
 }
@@ -204,6 +193,56 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+  */
+  sConfig.Channel = ADC_CHANNEL_10;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
@@ -328,7 +367,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 9600;
+  huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -516,79 +555,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-/******************************************/
-void Usart_Recv_Task(unsigned char Byte){
-Rxd_Byte=Byte;
-if(!Usart_BLE.Recv_Enable)
-		return;
-if(Rxd_Byte == 0x3C){ // '<' - start
-	Usart_BLE.Start_Recv = 1;
-	Usart_BLE.Recv_Cnt =0;
-	Usart_BLE.Recv_Cmplt_Flag=0;
-	return;
-	}
-//in future add code for number of bytes also
-if(Rxd_Byte == 0x3E){ // '>' - stop
-	Usart_BLE.Start_Recv = 0;
-	Usart_BLE.Recv_Cmplt_Flag=1;
-	return;
-	}
 
-Usart_BLE.RX_Buff[Usart_BLE.Recv_Cnt++] = Rxd_Byte;
-if(Usart_BLE.Recv_Cnt >= Max_RX_Buff_Size){
-	Usart_BLE.Recv_Cnt = 0;
-	//In future write code for Buffer overflow error
-	}
-	
-}
-
-
-
-/******************************************/
-void Reset_Usart_Recv_task(void){
-Usart_BLE.Start_Recv = 1;
-Usart_BLE.Recv_Cnt =0;
-Usart_BLE.Recv_Cmplt_Flag=0;
-memset(Usart_BLE.RX_Buff, '\0', sizeof(Usart_BLE.RX_Buff));
-}
-/******************************************/
-
-
-/******************************************/
-unsigned char Usart_Get_Data(unsigned char Index){
-//write code for index less than 0 or index outof border
-return Usart_BLE.RX_Buff[Index];	
-}
-/******************************************/
-
-void RX_Task(void){
-if(strcmp("L2-ON",(const char *)Usart_BLE.RX_Buff)==0){
-				HAL_GPIO_WritePin(USER_LED_2_GPIO_Port, USER_LED_2_Pin, GPIO_PIN_RESET);
-				RM_LCD_Write_Str(14,1,"N ");
-			}
-else if(strcmp("L2-OFF",(const char *)Usart_BLE.RX_Buff)==0){
-				HAL_GPIO_WritePin(USER_LED_2_GPIO_Port, USER_LED_2_Pin, GPIO_PIN_SET);
-				RM_LCD_Write_Str(14,1,"FF");
-			}
-else if(strcmp("L1-ON",(const char *)Usart_BLE.RX_Buff)==0){
-				HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_RESET);
-				RM_LCD_Write_Str(4,1,"N ");
-			}
-else if(strcmp("L1-OFF",(const char *)Usart_BLE.RX_Buff)==0){
-				HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_SET);
-				RM_LCD_Write_Str(4,1,"FF");
-			}
-else{
-				RM_LCD_Write_Str(0,0,"                ");
-				RM_LCD_Write_Str(0,0,(uint8_t *)Usart_BLE.RX_Buff);
-			}
-Reset_Usart_Recv_task();
-HAL_GPIO_WritePin(GPIOB, Buzzer_Pin,GPIO_PIN_SET);
-HAL_Delay(100);
-HAL_GPIO_WritePin(GPIOB, Buzzer_Pin,GPIO_PIN_RESET);
-
-}
-/******************************************/
 /* USER CODE END 4 */
 
 /**

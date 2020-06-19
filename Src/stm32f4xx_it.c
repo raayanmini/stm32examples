@@ -43,7 +43,11 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+	volatile int Count=0;
+	int Rx_Flag=0;
+	extern volatile unsigned char Rx_Buff[200];
+	extern volatile unsigned char Rx_Buff_Time[200];
+	extern int Time_Flag;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -245,16 +249,42 @@ void EXTI9_5_IRQHandler(void)
 /**
   * @brief This function handles USART1 global interrupt.
   */
+int flag;
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
 
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
-  /* USER CODE BEGIN USART1_IRQn 1 */
+	static int i=0,j=0;
 
-unsigned char Temp =  (uint8_t)(huart1.Instance->DR & (uint8_t)0x00FF);
-	Usart_Recv_Task(Temp);
+  /* USER CODE BEGIN USART1_IRQn 1 */
+	Rx_Buff[Count]=(uint8_t)(huart1.Instance->DR & (uint8_t)0x00FF);
+		//temp1=(uint8_t)(huart1.Instance->DR & (uint8_t)0x00FF);
+	if((Rx_Buff[Count-1]=='O')&&(Rx_Buff[Count]=='K')){
+			Rx_Flag=1;
+			Count=0;
+			//return;
+	}
+	if(( Rx_Buff[Count-3]=='+')&&(Rx_Buff[Count-2]=='I')&&(Rx_Buff[Count-1]=='P')&&(Rx_Buff[Count]=='D'))
+			flag=1;
+
+	if(flag==1){
+		 if((Rx_Buff[Count]!='D')&&(Rx_Buff[Count]!=',')){
+				Rx_Buff_Time[i++]=Rx_Buff[Count];
+				j++;
+		 }
+	}
+	 if(j==10)
+	 {
+		 j=0;
+		 i=0;
+		 flag=0;
+	 }
+		//Rx_Buff_Time[Count]=(uint8_t)(huart1.Instance->DR & (uint8_t)0x00FF);
+	if(Count>199)
+		Count=0;
+	  Count++;
   /* USER CODE END USART1_IRQn 1 */
 }
 
