@@ -56,8 +56,8 @@ UART_HandleTypeDef huart6;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-int temp;
-
+uint8_t Time_Date[8];
+uint8_t Mem_Write_data[8]={0x01,0x34,0x03,0x06,0x19,0x06,0x20};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -86,8 +86,8 @@ static void MX_RTC_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-		int slave_addr=0;
-		char I2c_Number_Buf[10];
+	char I2c_Number_Buf[10];
+	char Temp_Value[2];
 
   /* USER CODE END 1 */
   
@@ -119,9 +119,42 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 	RM_LCD_Init();
-	RM_LCD_Goto(1,0);
-	RM_LCD_PutStr("I2C SCANING...");	
+	RM_LCD_Goto(3,0);
+	RM_LCD_PutStr("RTC Testcase");
 	HAL_Delay(1000);
+	HAL_Delay(1000);
+	RM_LCD_Clear();
+	/* Date & Time Write in to RTC  */
+	   /*HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x00,1, (uint8_t *)&Mem_Write_data[0],1,1000);
+		 HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x01,1, (uint8_t *)&Mem_Write_data[1],1,1000);
+		 HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x02,1, (uint8_t *)&Mem_Write_data[2],1,1000);
+		 HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x03,1, (uint8_t *)&Mem_Write_data[3],1,1000);
+		 HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x04,1, (uint8_t *)&Mem_Write_data[4],1,1000);
+		 HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x05,1, (uint8_t *)&Mem_Write_data[5],1,1000);
+		 HAL_I2C_Mem_Write(&hi2c1,(0x68<<1),0x06,1, (uint8_t *)&Mem_Write_data[6],1,1000);
+		*/
+
+while(1)
+	{
+				if((HAL_I2C_IsDeviceReady(&hi2c1,(0x68<<1),1,10))==HAL_OK)
+				 {
+								RM_LCD_Write_Str(0 ,1,"                ");
+								sprintf(I2c_Number_Buf,"%d",0x68);
+								RM_LCD_Write_Str(0 ,1,"DS1307 Found:");
+								RM_LCD_Write_Str(13 ,1,I2c_Number_Buf);
+								HAL_Delay(1000);
+								HAL_Delay(1000);
+								break;
+				 }
+				 else
+				 {
+					     RM_LCD_Write_Str(0 ,1,"RTC Not Found:");
+							 HAL_Delay(1000);
+							 HAL_Delay(500);
+							 continue;
+				 }
+}
+	RM_LCD_Clear();
 
   /* USER CODE END 2 */
  
@@ -129,37 +162,34 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	 
-		 for(slave_addr=0;slave_addr<128;slave_addr++)
-		 { 
-				 if((HAL_I2C_IsDeviceReady(&hi2c1,(slave_addr<<1),1,10))==HAL_OK)
-				 {
-								RM_LCD_Write_Str(0 ,1,"                ");
-								sprintf(I2c_Number_Buf,"%d",slave_addr);
-								if(slave_addr==0x68)
-								{
-										RM_LCD_Write_Str(0 ,1,"DS1307 Found:");
-										RM_LCD_Write_Str(13 ,1,I2c_Number_Buf);
-										HAL_Delay(1000);
-										HAL_Delay(1000);
-								}
-								else if(slave_addr==0x50)
-								{
-										RM_LCD_Write_Str(0 ,1,"EEPROM Found:");
-										RM_LCD_Write_Str(13 ,1,I2c_Number_Buf);
-										HAL_Delay(1000);
-										HAL_Delay(1000);
-							
-								}
-								else
-								{					
-										 RM_LCD_Write_Str(0 ,1,"Device Found:");
-										 RM_LCD_Write_Str(13 ,1,I2c_Number_Buf);
-										 HAL_Delay(1000);
-										 HAL_Delay(500);
-								}
-				 }
-	   }
+			HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x00,1, (uint8_t *)&Time_Date[0],1,1000);
+			HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x01,1, (uint8_t *)&Time_Date[1],1,1000);
+			HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x02,1, (uint8_t *)&Time_Date[2],1,1000);
+			HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x03,1, (uint8_t *)&Time_Date[3],1,1000);
+			HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x04,1, (uint8_t *)&Time_Date[4],1,1000);
+			HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x05,1, (uint8_t *)&Time_Date[5],1,1000);
+			HAL_I2C_Mem_Read(&hi2c1,(0x68<<1),0x06,1, (uint8_t *)&Time_Date[6],1,1000);
+			RM_LCD_Goto(0,0);
+			RM_LCD_PutStr("TIME: ");
+			sprintf(Temp_Value, "%d",Time_Date[2]-6*(Time_Date[2]>>4));
+		  RM_LCD_PutStr(Temp_Value);
+		  RM_LCD_Write_DATA(':');
+		  sprintf(Temp_Value, "%d",Time_Date[1]-6*(Time_Date[1]>>4));
+		  RM_LCD_PutStr(Temp_Value);
+		  RM_LCD_Write_DATA(':');
+		  sprintf(Temp_Value, "%d",Time_Date[0]-6*(Time_Date[0]>>4));
+		  RM_LCD_PutStr(Temp_Value);
+			RM_LCD_Goto(0,1);
+			RM_LCD_PutStr("DATE: ");
+			sprintf(Temp_Value, "%d",Time_Date[4]-6*(Time_Date[4]>>4));
+			RM_LCD_PutStr(Temp_Value);
+			RM_LCD_Write_DATA(':');
+			sprintf(Temp_Value, "%d",Time_Date[5]-6*(Time_Date[5]>>4));
+			RM_LCD_PutStr(Temp_Value);
+			RM_LCD_Write_DATA(':');
+			sprintf(Temp_Value, "%d",Time_Date[6]-6*(Time_Date[6]>>4));
+			RM_LCD_PutStr(Temp_Value);
+			HAL_Delay(300);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
