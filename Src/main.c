@@ -131,10 +131,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		 HAL_SPI_TransmitReceive(&hspi1,(uint8_t *)&Tx_Buff, (uint8_t *)&Rx_Buff,1,100);
+		 HAL_SPI_TransmitReceive_IT(&hspi1,(uint8_t *)&Tx_Buff, (uint8_t *)&Rx_Buff,1);
 		 RM_LCD_Write_CMD(0xC0);
      RM_LCD_Write_DATA(Rx_Buff);
-		/* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
