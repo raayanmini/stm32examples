@@ -23,6 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include "Lcd.h"
 
 /* USER CODE END Includes */
 
@@ -56,7 +58,8 @@ UART_HandleTypeDef huart6;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-
+char Temp_Value[30];
+int temp,raw_adc;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -115,8 +118,11 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_RTC_Init();
   MX_ADC1_Init();
+	
   /* USER CODE BEGIN 2 */
-
+	RM_LCD_Init();
+	RM_LCD_Goto(0,0);
+	RM_LCD_PutStr("LM35 -> ADC");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -126,10 +132,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_RESET); 	// 	IO line goes Low (Led is  ON)
-		HAL_Delay(1000);															//	Add 1-Second Delay	
-		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_SET);		// 	IO line goes High (Led is  OFF)
-		HAL_Delay(1000);
+			HAL_ADC_Start(&hadc1);
+			HAL_ADC_PollForConversion(&hadc1,10);
+			raw_adc=HAL_ADC_GetValue(&hadc1); // digtal value range is 0 to 4095;
+			temp=(raw_adc/12); // ANALOG SUPPLY - Reference Volatage - 3.6V ; 
+			sprintf(Temp_Value, "%d", temp);
+			RM_LCD_Goto(0,1);
+			RM_LCD_PutStr("TEMP: ");
+			RM_LCD_PutStr(Temp_Value);
+			RM_LCD_Put_Char(0xDF);
+			RM_LCD_Put_Char('C');
+			HAL_Delay(300);
   }
   /* USER CODE END 3 */
 }
