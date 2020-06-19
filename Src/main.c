@@ -23,7 +23,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
+#include "Lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -76,7 +77,9 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+unsigned char RX_Buff[10];
+char Lcd_Buff[30];
+int 		ISR_Flag=0;
 /* USER CODE END 0 */
 
 /**
@@ -95,6 +98,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+	char Rx_Buff,Tx_Buff='A';
 
   /* USER CODE END Init */
 
@@ -116,20 +120,24 @@ int main(void)
   MX_RTC_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-
+	RM_LCD_Init();
+	RM_LCD_Clear();
+	HAL_Delay(100);
+	RM_LCD_Write_Str(3,0,"SPI LoopBack");
+	HAL_Delay(3000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+		 HAL_SPI_TransmitReceive(&hspi1,(uint8_t *)&Tx_Buff, (uint8_t *)&Rx_Buff,1,100);
+		 RM_LCD_Write_CMD(0xC0);
+     RM_LCD_Write_DATA(Rx_Buff);
+		/* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_RESET); 	// 	IO line goes Low (Led is  ON)
-		HAL_Delay(1000);															//	Add 1-Second Delay	
-		HAL_GPIO_WritePin(USER_LED_1_GPIO_Port, USER_LED_1_Pin, GPIO_PIN_SET);		// 	IO line goes High (Led is  OFF)
-		HAL_Delay(1000);
+
   }
   /* USER CODE END 3 */
 }
